@@ -1,7 +1,8 @@
+import uuid
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.utils import AnalysisException
 from pyspark.sql.functions import col
-import json
+
 
 class Handler:
 
@@ -41,6 +42,44 @@ class Handler:
             self.dbutils.notebook.exit({"message": "One o more of the columns that you are tryng to drop NaN's does not exists", "status":"FAILED"})
         return new_df
 
+    def file_exists(self, path):
+        try:
+            self.dbutils.fs.ls(path)
+            return True
+        except Exception:
+            return False
+    
+    def save_dataframe_to_csv(self, df: DataFrame):
+        uid_exists = True
+        trys = 0
+        while uid_exists and trys < 20:
+            uid = uuid.uuid1()
+            data_location = f"file:/dbfs/FileStore/tables/tesis/cleared_data/{uid}"
+            uid_exists = self.file_exists(data_location)
+            trys+=1
+
+        if not uid_exists:
+            
+            df.coalesce(1).write.options(header='True', delimiter=',').mode("overwrite").csv(data_location)
+            
+            ## Move Dataset And Delete Aditional created files
+            files = self.dbutils.fs.ls(data_location)
+
+            for x in files:
+                if not x.path.endswith(".csv"):
+                    self.dbutils.fs.rm(f"{data_location}/{x.path}")
+            print(self.dbutils.fs.ls(data_location))
+            csv_file = [x.path for x in files if x.path.endswith(".csv")][0]
+            self.dbutils.fs.mv(csv_file, data_location.rstrip('/') + ".csv")
+            self.dbutils.fs.rm(data_location, recurse = True)
+            self.dbutils.fs.rm(f"file:/dbfs/FileStore/tables/tesis/cleared_data/.{uid}.csv.crc")
+            
+            self.dbutils.notebook.exit({"resultUid": f"{uid}.csv", "status":"SUCCESSFUL"})
+        else:
+            self.dbutils.notebook.exit({"message": "Unable to save file tryed to generate an uid 20 times", "status":"FAILED"})
+        
+        
+        
     def integrate_json_or_parquet_datasets(self, resource_type: str, resource_id: list):
         df = None
         try:

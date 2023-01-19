@@ -26,7 +26,7 @@
 from pyspark.sql.functions import col
 from pyspark.sql.utils import AnalysisException
 from src.handlers.handler import Handler
-from src.utils.utils import string_to_list_with_spaces, string_to_list_without_spaces, file_exists
+from src.utils.utils import string_to_list_with_spaces, string_to_list_without_spaces
 
 
 # COMMAND ----------
@@ -34,7 +34,6 @@ from src.utils.utils import string_to_list_with_spaces, string_to_list_without_s
 '''
     This code finds one or more datasets with the route, integrate them and selects a list of columns to keep
 '''
-print(file_exists(dbutils, "file:/dbfs/FileStore/tables/tesis/data/p01/exercise.json"))
 
 ## Resource Info
 resource_type = dbutils.widgets.get("resourceType")
@@ -54,6 +53,7 @@ if all(elem in select_columns  for elem in dupl_cols) and all(elem in select_col
         df = handler.select_columns(df, select_columns)
         df = handler.drop_duplicated_columns(df, dupl_cols)
         df = handler.drop_nan_columns(df, nan_cols)
+        handler.save_dataframe_to_csv(df)
         
     elif resource_type == "csv":
         pass
