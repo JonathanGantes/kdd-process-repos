@@ -25,51 +25,43 @@
 '''
 from pyspark.sql.functions import col
 from pyspark.sql.utils import AnalysisException
-from src.utils.utils import Utils
-string_to_list = Utils.string_to_list
+from src.handlers.handler import Handler
+from src.utils.utils import string_to_list_with_spaces, string_to_list_without_spaces
+
 
 # COMMAND ----------
 
 '''
     This code finds one or more datasets with the route, integrate them and selects a list of columns to keep
 '''
-print(Utils.string_to_list("hola.nomvre,   perros"))
-
-## List of columns to keep
-select_columns = string_to_list(dbutils.widgets.get("selectColumns"))
 
 ## Resource Info
 resource_type = dbutils.widgets.get("resourceType")
-resource_id = dbutils.widgets.get("resourceId")
+resource_id = string_to_list_with_spaces(dbutils.widgets.get("resourceId"))
+select_columns = string_to_list_without_spaces(dbutils.widgets.get("selectColumns"))
+dupl_cols = string_to_list_without_spaces(dbutils.widgets.get("clearDuplicated"))
+nan_cols = string_to_list_without_spaces(dbutils.widgets.get("clearNaN"))
 
-if resource_type == "json" or resource_type == "parquet" :
-    try:
-        df3 = spark.read.format(resource_type).load(resource_id)
+
+
+if all(elem in select_columns  for elem in dupl_cols) and all(elem in select_columns  for elem in nan_cols):
+
+    if resource_type == "json" or resource_type == "parquet" :
+
+        handler = Handler(spark, dbutils)
+        df = handler.integrate_json_or_parquet_datasets(resource_type, resource_id)
+        df = handler.select_columns(df, select_columns)
+        df = handler.drop_duplicated_columns(df, dupl_cols)
+        df = handler.drop_nan_columns(df, nan_cols)
+        handler.save_dataframe_to_csv(df)
         
-    except AnalysisException as e:
-        print(e)
+    elif resource_type == "csv":
+        pass
+        
+    else:
+        dbutils.notebook.exit({"message": "Invalid Resource Type", "status":"FAILED"})
 else:
-    raise (Exception("Invalid resourceType"))
-
-try:
-    df3 = df3.select([col(col_name).alias(col_name) for col_name in select_columns])
-    df3.show()
-    df3.printSchema()
-except Exception as e:
-    pass  # buscar las excepciones posibles
-
-
-
-# COMMAND ----------
-
-## List of columns which you want to apply dropDuplicated
-dupl_cols = string_to_list(dbutils.widgets.get("clearDuplicated"))
-nan_cols = string_to_list(dbutils.widgets.get("clearNaN"))
-
-
-
-
-
+    dbutils.notebook.exit({"message": "Columns inside clearDuplicated or clearNaN have to be in column as well", "status":"FAILED"})
 
 
 
