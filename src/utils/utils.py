@@ -1,3 +1,5 @@
+from pyspark.sql.dataframe import DataFrame
+
 class Utils:
 
     @staticmethod
@@ -8,3 +10,11 @@ class Utils:
     @staticmethod
     def clear_white_spaces(value: str):
         return value.replace(" ","")
+
+    @staticmethod
+    def drop_duplicated_columns(df: DataFrame, columns:list):
+        return df.drop_duplicates(columns)
+
+    @staticmethod
+    def drop_nan_columns(df: DataFrame, columns:list ):
+        return df.dropna(subset=columns)
