@@ -25,10 +25,8 @@
 '''
 from pyspark.sql.functions import col
 from pyspark.sql.utils import AnalysisException
-from src.utils.utils import Utils
-string_to_list = Utils.string_to_list
-drop_duplicated_columns = Utils.drop_duplicated_columns
-drop_nan_columns = Utils.drop_nan_columns
+from src.handlers.handler import Handler
+from src.utils.utils import string_to_list_with_spaces, string_to_list_without_spaces
 
 
 # COMMAND ----------
@@ -39,36 +37,32 @@ drop_nan_columns = Utils.drop_nan_columns
 
 ## Resource Info
 resource_type = dbutils.widgets.get("resourceType")
-resource_id = dbutils.widgets.get("resourceId")
-
-## List of columns to keep
-select_columns = string_to_list(dbutils.widgets.get("selectColumns"))
-
-## List of columns which you want to apply dropDuplicated or droNaN
-dupl_cols = string_to_list(dbutils.widgets.get("clearDuplicated"))
-nan_cols = string_to_list(dbutils.widgets.get("clearNaN"))
+resource_id = string_to_list_with_spaces(dbutils.widgets.get("resourceId"))
+select_columns = string_to_list_without_spaces(dbutils.widgets.get("selectColumns"))
+dupl_cols = string_to_list_without_spaces(dbutils.widgets.get("clearDuplicated"))
+nan_cols = string_to_list_without_spaces(dbutils.widgets.get("clearNaN"))
 
 
 
-if resource_type == "json" or resource_type == "parquet" :
-    try:
-        df3 = spark.read.format(resource_type).load(resource_id)
-    except AnalysisException as e:
-        print(e)
+if all(elem in select_columns  for elem in dupl_cols) and all(elem in select_columns  for elem in nan_cols):
 
-elif resource_type == "csv":
-    pass
-    
+    if resource_type == "json" or resource_type == "parquet" :
+
+        handler = Handler(spark, dbutils)
+        df = handler.integrate_json_or_parquet_datasets(resource_type, resource_id)
+        df = handler.select_columns(df, select_columns)
+        df = handler.drop_duplicated_columns(df, dupl_cols)
+        df = handler.drop_nan_columns(df, nan_cols)
+        df.show()
+        df.printSchema()
+
+    elif resource_type == "csv":
+        pass
+        
+    else:
+        dbutils.notebook.exit("Invalid Resource Type")
 else:
-    raise (Exception("Invalid resourceType"))
+    dbutils.notebook.exit("Columns inside clearDuplicated or clearNaN have to be in column as well")
 
-try:
-    df3 = df3.select([col(col_name).alias(col_name) for col_name in select_columns])
-    df3 = drop_duplicated_columns(df3, dupl_cols)
-    df3.show()
-    df3.printSchema()
-    
-except Exception as e:
-    pass  # buscar las excepciones posibles
 
 

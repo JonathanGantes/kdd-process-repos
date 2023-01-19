@@ -1,20 +1,10 @@
-from pyspark.sql.dataframe import DataFrame
 
-class Utils:
+def string_to_list_without_spaces(value: str):
+    result = clear_white_spaces(value)
+    return result.split(",") if "," in result else [result]
+    
+def string_to_list_with_spaces(value: str):
+    return value.split(",") if "," in value else [value]
 
-    @staticmethod
-    def string_to_list(value: str):
-        result = __class__.clear_white_spaces(value)
-        return result.split(",") if "," in result else [result]
-
-    @staticmethod
-    def clear_white_spaces(value: str):
-        return value.replace(" ","")
-
-    @staticmethod
-    def drop_duplicated_columns(df: DataFrame, columns:list):
-        return df.drop_duplicates(columns)
-
-    @staticmethod
-    def drop_nan_columns(df: DataFrame, columns:list ):
-        return df.dropna(subset=columns)
+def clear_white_spaces(value: str):
+    return value.replace(" ","")
