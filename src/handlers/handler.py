@@ -29,7 +29,13 @@ class Handler:
     def drop_duplicated_columns(self, df: DataFrame, columns:list):
         new_df = None
         try:
-            new_df = df.drop_duplicates(columns)
+            if columns[0] == "":
+                pass
+            elif columns[0] == "*":
+                new_df = df.drop_duplicates()
+            else:
+                new_df = df.drop_duplicates(columns)
+
         except Exception:
             self.dbutils.notebook.exit({"message": "One o more of the columns that you are tryng to drop druplicateds does not exists", "status":"FAILED"})
         return new_df
@@ -37,7 +43,13 @@ class Handler:
     def drop_nan_columns(self, df: DataFrame, columns:list ):
         new_df = None
         try:
-            new_df = df.dropna(subset=columns)
+            if columns[0] == "":
+                pass
+            elif columns[0] == "*":
+                new_df = df.dropna()
+            else:
+                new_df = df.dropna(subset=columns)
+
         except Exception:
             self.dbutils.notebook.exit({"message": "One o more of the columns that you are tryng to drop NaN's does not exists", "status":"FAILED"})
         return new_df
