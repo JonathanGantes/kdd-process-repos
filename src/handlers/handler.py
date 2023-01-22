@@ -9,6 +9,10 @@ class Handler:
     def __init__(self, spark, dbutils):
         self.__spark = spark
         self.__dbutils = dbutils
+        self.start_rows = 0
+        self.end_rows = 0
+        self.duplicated_dropeds = 0
+        self.nan_dropeds = 0
     
     @property
     def spark(self):
@@ -22,19 +26,32 @@ class Handler:
         new_df = None
         try:
             new_df = df.select([col(col_name).alias(col_name) for col_name in select_columns])
+            self.start_rows = new_df.count()
         except Exception:
             self.dbutils.notebook.exit({"message": "One o more of the columns that you are tryng to select does not exists", "status":"FAILED"})
         return new_df
 
-    def drop_duplicated_columns(self, df: DataFrame, columns:list):
+    def select_array_columns(self, df: DataFrame, select_columns : list):
         new_df = None
         try:
+            new_df = df.select([col(col_name).alias(col_name) for col_name in select_columns])
+            self.start_rows = new_df.count()
+        except Exception:
+            self.dbutils.notebook.exit({"message": "One o more of the columns that you are tryng to select does not exists", "status":"FAILED"})
+        return new_df
+    
+    def drop_duplicated_columns(self, df: DataFrame, columns:list):
+        new_df = None
+        old_count =df.count()
+        try:
             if columns[0] == "":
-                pass
+                new_df = df
             elif columns[0] == "*":
                 new_df = df.drop_duplicates()
+                self.duplicated_dropeds = old_count - new_df.count()
             else:
                 new_df = df.drop_duplicates(columns)
+                self.duplicated_dropeds = old_count - new_df.count()
 
         except Exception:
             self.dbutils.notebook.exit({"message": "One o more of the columns that you are tryng to drop druplicateds does not exists", "status":"FAILED"})
@@ -42,13 +59,16 @@ class Handler:
 
     def drop_nan_columns(self, df: DataFrame, columns:list ):
         new_df = None
+        old_count = df.count()
         try:
             if columns[0] == "":
-                pass
+                new_df = df
             elif columns[0] == "*":
                 new_df = df.dropna()
+                self.nan_dropeds = old_count - new_df.count()
             else:
                 new_df = df.dropna(subset=columns)
+                self.nan_dropeds = old_count - new_df.count()
 
         except Exception:
             self.dbutils.notebook.exit({"message": "One o more of the columns that you are tryng to drop NaN's does not exists", "status":"FAILED"})
@@ -64,6 +84,8 @@ class Handler:
     def save_dataframe_to_csv(self, df: DataFrame):
         uid_exists = True
         trys = 0
+        self.end_rows = df.count()
+
         while uid_exists and trys < 20:
             uid = uuid.uuid1()
             data_location = f"file:/dbfs/FileStore/tables/tesis/cleared_data/{uid}"
@@ -86,7 +108,13 @@ class Handler:
             self.dbutils.fs.rm(data_location, recurse = True)
             self.dbutils.fs.rm(f"file:/dbfs/FileStore/tables/tesis/cleared_data/.{uid}.csv.crc")
             
-            self.dbutils.notebook.exit({"resultUid": f"{uid}.csv", "status":"SUCCESSFUL"})
+            self.dbutils.notebook.exit({
+                                        "resultUid": f"{uid}.csv",
+                                        "startRows": f"{self.start_rows}",
+                                        "endRows": f"{self.end_rows}",
+                                        "duplicatedDropedRows": f"{self.duplicated_dropeds}",
+                                        "nanDropedRows": f"{self.nan_dropeds}",
+                                        "status":"SUCCESSFUL"})
         else:
             self.dbutils.notebook.exit({"message": "Unable to save file tryed to generate an uid 20 times", "status":"FAILED"})
         
@@ -95,7 +123,7 @@ class Handler:
     def integrate_json_or_parquet_datasets(self, resource_type: str, resource_id: list):
         df = None
         try:
-            df = self.spark.read.format(resource_type).load(*resource_id)
+            df = self.spark.read.format(resource_type).load(resource_id)
         except AnalysisException:
             self.dbutils.notebook.exit({"message": "Invalid Resource Id or Resource Does't Exists", "status":"FAILED"})
         return df
