@@ -140,7 +140,26 @@ class CommonHandler:
             self.dbutils.notebook.exit({"message": "Invalid Resource Id or Resource Does't Exists", "status":"FAILED"})
         return df
 
-    def get_location(location: int):
+    def integrate_csv(self, resource_id: list,  header : bool = True , delimter = ",", schema : str = None) -> DataFrame:
+        df = None
+        try:
+            if schema is None:
+                df = self.spark.read.format("csv") \
+                    .option("header", header) \
+                    .option("delimiter", delimter) \
+                    .load(resource_id)
+            else:
+                df = self.spark.read.format("csv") \
+                    .option("header", header) \
+                    .option("delimiter", delimter) \
+                    .schema(schema) \
+                    .load(resource_id)
+    
+        except AnalysisException:
+            self.dbutils.notebook.exit({"message": "Invalid Resource Id or Resource Does't Exists", "status":"FAILED"})
+        return df
+
+    def get_location(self, location: int):
         if location == 1:
             return "cleared_data"
         elif location == 2:

@@ -36,12 +36,16 @@ from src.utils.utils import *
 ## Resource Info
 
 resource_id = string_to_list_with_spaces(dbutils.widgets.get("resourceId"))
-
+resource_id = [f"file:/dbfs/FileStore/tables/tesis/data/cleared_data/{res}" for res in resource_id]
 
 try:
     handler = TransformSteps(spark, dbutils)
-            
-    df = handler.integrate_json_or_parquet_datasets(resource_type, resource_id)
+
+    schema = handler.generate_schema()
+
+    
+
+    df = handler.integrate_csv(resource_id, schema=schema)
 
     df = df.transform(handler.create_id)
     df = df.transform(handler.get_minute_form_datetime)
@@ -50,9 +54,10 @@ try:
     df = df.transform(handler.steps_to_lvl)
     df = df.select("id", "dateTime", "steps", "hour", "minute", "timeShift", "stepsLvl")
 
-    
-    df.show()
+    display(df)
 
+    handler.save_dataframe_to_csv(df, location=2)
+    
 except Exception:
     dbutils.notebook.exit({"message": "Something went wrong when transforming data", "status":"FAILED"})
 

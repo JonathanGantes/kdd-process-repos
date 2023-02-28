@@ -1,10 +1,17 @@
 
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.functions import col, when, lit, hour, minute, monotonically_increasing_id
+from pyspark.sql.types import StructType, TimestampType, IntegerType
 from handlers.common_handler import CommonHandler
 
 
 class TransformSteps(CommonHandler):
+
+    def generate_schema():
+        schema = StructType() \
+            .add("dateTime",TimestampType(),True) \
+            .add("steps",IntegerType(),True)
+        return schema
 
     def datetime_to_shifts(self, df: DataFrame):
         return df.withColumn("timeShift", \

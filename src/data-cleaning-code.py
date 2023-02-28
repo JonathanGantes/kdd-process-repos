@@ -53,6 +53,8 @@ if (all(elem in columns_names  for elem in dupl_cols) or is_empty_or_all(dupl_co
         df = handler.drop_duplicated_columns(df, dupl_cols)
         df = handler.drop_nan_columns(df, nan_cols)
         
+        display(df)
+
         handler.save_dataframe_to_csv(df, location=1)
         
     elif resource_type == "csv":
