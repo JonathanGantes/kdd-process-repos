@@ -7,12 +7,6 @@ from handlers.common_handler import CommonHandler
 
 class TransformSteps(CommonHandler):
 
-    def generate_schema():
-        schema = StructType() \
-            .add("dateTime",TimestampType(),True) \
-            .add("steps",IntegerType(),True)
-        return schema
-
     def datetime_to_shifts(self, df: DataFrame):
         return df.withColumn("timeShift", \
             when(((hour(col("dateTime"))) >= 0) & ((hour(col("dateTime"))) <= 5), lit("madrugada")) \
@@ -35,3 +29,10 @@ class TransformSteps(CommonHandler):
 
     def get_minute_form_datetime(self, df: DataFrame):
         return df.withColumn("minute", minute(col("dateTime")))
+    
+    @staticmethod
+    def generate_schema():
+        schema = StructType() \
+            .add("dateTime",TimestampType(),True) \
+            .add("steps",IntegerType(),True)
+        return schema

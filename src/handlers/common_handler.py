@@ -106,8 +106,8 @@ class CommonHandler:
             trys+=1
 
         if not uid_exists:
-            
-            df.coalesce(1).write.options(header='True', delimiter=',').mode("overwrite").csv(data_location)
+
+             df.coalesce(1).write.options(header='True', delimiter=',').mode("overwrite").csv(data_location)
             
             ## Move Dataset And Delete Aditional created files
             files = self.dbutils.fs.ls(data_location)
@@ -121,13 +121,19 @@ class CommonHandler:
             self.dbutils.fs.rm(data_location, recurse = True)
             self.dbutils.fs.rm(f"file:/dbfs/FileStore/tables/tesis/{folder}/.{uid}.csv.crc")
             
-            self.dbutils.notebook.exit({
-                                        "resultUid": f"{uid}.csv",
-                                        "startRows": f"{self.start_rows}",
-                                        "endRows": f"{self.end_rows}",
-                                        "duplicatedDropedRows": f"{self.duplicated_dropeds}",
-                                        "nanDropedRows": f"{self.nan_dropeds}",
-                                        "status":"SUCCESSFUL"})
+            if location == 1:
+                self.dbutils.notebook.exit({
+                                            "resultUid": f"{uid}.csv",
+                                            "startRows": f"{self.start_rows}",
+                                            "endRows": f"{self.end_rows}",
+                                            "duplicatedDropedRows": f"{self.duplicated_dropeds}",
+                                            "nanDropedRows": f"{self.nan_dropeds}",
+                                            "status":"SUCCESSFUL"})
+            else:
+                self.dbutils.notebook.exit({
+                                            "resultUid": f"{uid}.csv",
+                                            "totalRows": f"{self.end_rows}",
+                                            "status":"SUCCESSFUL"})
         else:
             self.dbutils.notebook.exit({"message": "Unable to save file tryed to generate an uid 20 times", "status":"FAILED"})
 
