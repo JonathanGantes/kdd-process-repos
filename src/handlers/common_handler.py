@@ -107,7 +107,7 @@ class CommonHandler:
 
         if not uid_exists:
 
-             df.coalesce(1).write.options(header='True', delimiter=',').mode("overwrite").csv(data_location)
+            df.coalesce(1).write.options(header='True', delimiter=',').mode("overwrite").csv(data_location)
             
             ## Move Dataset And Delete Aditional created files
             files = self.dbutils.fs.ls(data_location)
@@ -115,6 +115,7 @@ class CommonHandler:
             for x in files:
                 if not x.path.endswith(".csv"):
                     self.dbutils.fs.rm(f"{data_location}/{x.path}")
+
             print(self.dbutils.fs.ls(data_location))
             csv_file = [x.path for x in files if x.path.endswith(".csv")][0]
             self.dbutils.fs.mv(csv_file, data_location.rstrip('/') + ".csv")

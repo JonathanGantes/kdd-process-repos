@@ -35,24 +35,22 @@ from src.utils.utils import *
 
 ## Resource Info
 
-resource_id = string_to_list_with_spaces("f7706a08-b724-11ed-8f1e-00163e8c48a6.csv")
+resource_id = string_to_list_with_spaces(dbutils.widgets.get("resourceId"))
 resource_id = [f"file:/dbfs/FileStore/tables/tesis/cleared_data/{res}" for res in resource_id]
 
-try:
-    handler = TransformSteps(spark, dbutils)
+handler = TransformSteps(spark, dbutils)
 
-    schema = TransformSteps.generate_schema()
-    df = handler.integrate_csv(resource_id, schema=schema)
+schema = TransformSteps.generate_schema()
+df = handler.integrate_csv(resource_id, schema=schema)
     
-    df = df.transform(handler.create_id)
-    df = df.transform(handler.get_minute_form_datetime)
-    df = df.transform(handler.get_hour_form_datetime)
-    df = df.transform(handler.steps_to_lvl)
+df = df.transform(handler.create_id)
+df = df.transform(handler.get_minute_form_datetime)
+df = df.transform(handler.get_hour_form_datetime)
+df = df.transform(handler.steps_to_lvl)
     
-    df = df.select("id", "dateTime", "steps", "hour", "minute", "stepsLvl")
+df = df.select("id", "dateTime", "steps", "hour", "minute", "stepsLvl")
 
-    handler.save_dataframe_to_csv(df, location=2)
+handler.save_dataframe_to_csv(df, location=2)
     
-except Exception:
-    print("xd")
+
 
