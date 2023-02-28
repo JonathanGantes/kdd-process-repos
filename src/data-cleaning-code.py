@@ -23,10 +23,8 @@
 '''
     Import dependencies
 '''
-from pyspark.sql.functions import col
-from pyspark.sql.utils import AnalysisException
-from src.handlers.handler import Handler
-from src.utils.utils import string_to_list_with_spaces, string_to_list_without_spaces, is_empty_or_all
+from handlers.common_handler import CommonHandler
+from src.utils.utils import *
 
 
 # COMMAND ----------
@@ -38,22 +36,24 @@ from src.utils.utils import string_to_list_with_spaces, string_to_list_without_s
 ## Resource Info
 resource_type = dbutils.widgets.get("resourceType")
 resource_id = string_to_list_with_spaces(dbutils.widgets.get("resourceId"))
-select_columns = string_to_list_without_spaces(dbutils.widgets.get("selectColumns"))
+columns_names = get_original_column_name_list(dbutils.widgets.get("selectColumns"))
+columns_types = get_column_type_list(dbutils.widgets.get("selectColumns"))
+columns_new_names = get_new_column_name_list(dbutils.widgets.get("selectColumns"))
 dupl_cols = string_to_list_without_spaces(dbutils.widgets.get("clearDuplicated"))
 nan_cols = string_to_list_without_spaces(dbutils.widgets.get("clearNaN"))
 
 
-if (all(elem in select_columns  for elem in dupl_cols) or is_empty_or_all(dupl_cols[0])) and (all(elem in select_columns  for elem in nan_cols) or is_empty_or_all(nan_cols[0])):
+if (all(elem in columns_names  for elem in dupl_cols) or is_empty_or_all(dupl_cols[0])) and (all(elem in columns_names  for elem in nan_cols) or is_empty_or_all(nan_cols[0])):
 
     if resource_type == "json" or resource_type == "parquet" :
 
-        handler = Handler(spark, dbutils)
+        handler = CommonHandler(spark, dbutils)
         df = handler.integrate_json_or_parquet_datasets(resource_type, resource_id)
-        df = handler.select_columns(df, select_columns)
+        df = handler.select_columns(df, columns_names, columns_new_names, columns_types)
         df = handler.drop_duplicated_columns(df, dupl_cols)
         df = handler.drop_nan_columns(df, nan_cols)
         
-        handler.save_dataframe_to_csv(df)
+        handler.save_dataframe_to_csv(df, location=1)
         
     elif resource_type == "csv":
         pass
