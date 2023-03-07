@@ -23,8 +23,7 @@
 '''
     Import dependencies
 '''
-from transforms.transform_steps import TransformSteps
-from src.utils.utils import *
+
 
 
 # COMMAND ----------
@@ -33,7 +32,8 @@ from src.utils.utils import *
     This code finds one or more datasets with the route, integrate them and selects a list of columns to keep
 '''
 
-## Resource Info
+from transforms.transform_steps import TransformSteps
+from src.utils.utils import *
 
 resource_id = string_to_list_with_spaces(dbutils.widgets.get("resourceId"))
 resource_id = [f"file:/dbfs/FileStore/tables/tesis/cleared_data/{res}" for res in resource_id]
@@ -51,6 +51,3 @@ df = df.transform(handler.steps_to_lvl)
 df = df.select("id", "dateTime", "steps", "hour", "minute", "stepsLvl")
 
 handler.save_dataframe_to_csv(df, location=2)
-    
-
-
