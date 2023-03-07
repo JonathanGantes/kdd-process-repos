@@ -6,7 +6,7 @@ from handlers.common_handler import CommonHandler
 class DecisionTree(CommonHandler):
 
     
-    def group_categorical_and_continuous_Cols(df, indexCol, categoricalCols, continuousCols, labelCol):
+    def group_categorical_and_continuous_Cols(self, df, indexCol, categoricalCols, continuousCols, labelCol):
         indexers = [ StringIndexer(inputCol=c, outputCol="{0}_indexed".format(c))
                     for c in categoricalCols ]
 

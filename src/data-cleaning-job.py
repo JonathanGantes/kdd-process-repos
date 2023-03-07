@@ -45,7 +45,7 @@ nan_cols = string_to_list_without_spaces(dbutils.widgets.get("clearNaN"))
 header = True if dbutils.widgets.get("header").lower() == "true" else False
 
 delim = dbutils.widgets.get("delimiter")
-delimiter = delim if (",", "") not in delim else ","
+delimiter = delim if delim not in (",", "") else ","
 
 
 if (( all(elem in columns_names  for elem in dupl_cols) or is_empty_or_all(dupl_cols[0]))
