@@ -21,17 +21,12 @@
 # COMMAND ----------
 
 '''
-    Import dependencies
-'''
-
-
-
-# COMMAND ----------
-
-'''
     This code finds one or more datasets with the route, integrate them and selects a list of columns to keep
 '''
-
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import IndexToString,StringIndexer, VectorIndexer
+from pyspark.ml.classification import DecisionTreeClassifier
+from pyspark.ml.feature import VectorIndexer
 from mining.decision_tree import DecisionTree
 from src.utils.utils import *
 
@@ -40,12 +35,17 @@ resource_id = [f"file:/dbfs/FileStore/tables/tesis/transformed_data/{res}" for r
 
 handler = DecisionTree(spark, dbutils)
 
-df = handler.integrate_csv(resource_id)
+schema = DecisionTree.generate_schema()
 
-df = get_original_column_name_list(df, "id", [], ["steps", "hour", "minute"], "stepsLvl")
+df = handler.integrate_csv(resource_id, schema=schema)
+
+print("Readed File DataFrame")
+display(df)
+
+df = handler.group_categorical_and_continuous_Cols(df, "id", [], ["steps", "hour", "minute"], "stepsLvl")
 
 print("Group independent and dependant variables")
-df.show()
+display(df)
 
 labelIndexer = StringIndexer(inputCol='label',
                         outputCol='indexedLabel').fit(df)

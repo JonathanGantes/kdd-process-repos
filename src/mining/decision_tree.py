@@ -2,6 +2,7 @@ from pyspark.ml import Pipeline
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
 from pyspark.sql.functions import col
 from handlers.common_handler import CommonHandler
+from pyspark.sql.types import StructType, TimestampType, IntegerType, StringType
 
 class DecisionTree(CommonHandler):
 
@@ -26,3 +27,15 @@ class DecisionTree(CommonHandler):
         data = data.withColumn('label',col(labelCol))
 
         return data.select(indexCol,'features','label')
+    
+    @staticmethod
+    def generate_schema():
+        schema = StructType() \
+            .add("id",IntegerType(),True) \
+            .add("dateTime",TimestampType(),True) \
+            .add("steps",IntegerType(),True) \
+            .add("hour",IntegerType(),True) \
+            .add("minute",IntegerType(),True) \
+            .add("stepsLvl", StringType(), True)
+            
+        return schema
