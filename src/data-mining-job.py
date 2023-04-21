@@ -1,28 +1,4 @@
 # Databricks notebook source
-# MAGIC %md
-# MAGIC 
-# MAGIC # Data Cleaning Service
-# MAGIC This Service lets you integrate datasets, select and clean columns and save resultant dataset as csv or parquet
-# MAGIC 
-# MAGIC ## Parameters 
-# MAGIC 
-# MAGIC  - ###  job_id
-# MAGIC 	 - Description:
-# MAGIC 	 - Type:
-# MAGIC 	 - Example
-# MAGIC  - ### notebook_params
-# MAGIC 	 - #### resource_type
-# MAGIC        - Description:
-# MAGIC        - Type:
-# MAGIC        - Example:
-# MAGIC 	 - 
-# MAGIC  - 
-
-# COMMAND ----------
-
-'''
-    This code finds one or more datasets with the route, integrate them and selects a list of columns to keep
-'''
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import IndexToString,StringIndexer, VectorIndexer
 from pyspark.ml.classification import DecisionTreeClassifier
