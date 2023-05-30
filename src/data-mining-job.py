@@ -18,7 +18,7 @@ df = handler.integrate_csv(resource_id, schema=schema)
 print("Readed File DataFrame")
 display(df)
 
-df = handler.group_categorical_and_continuous_Cols(df, "id", [], ["steps", "hour", "minute"], "stepsLvl")
+df = handler.group_categorical_and_continuous_Cols(df, "id", ["timeShift"], ["steps", "hour", "minute"], "stepsLvl")
 
 print("Group independent and dependant variables")
 display(df)

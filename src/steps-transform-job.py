@@ -9,12 +9,13 @@ handler = TransformSteps(spark, dbutils)
 
 schema = TransformSteps.generate_schema()
 df = handler.integrate_csv(resource_id, schema=schema)
-    
+
 df = df.transform(handler.create_id)
+df = df.transform(handler.datetime_to_shifts)
 df = df.transform(handler.get_minute_form_datetime)
 df = df.transform(handler.get_hour_form_datetime)
 df = df.transform(handler.steps_to_lvl)
-    
-df = df.select("id", "dateTime", "steps", "hour", "minute", "stepsLvl")
+
+df = df.select("id", "steps", "hour", "minute",  "timeShift",  "stepsLvl")
 
 handler.save_dataframe_to_csv(df, location=2)
