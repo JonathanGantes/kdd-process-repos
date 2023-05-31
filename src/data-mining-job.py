@@ -15,10 +15,10 @@ schema = DecisionTree.generate_schema()
 
 df = handler.integrate_csv(resource_id, schema=schema)
 
-print("Readed File DataFrame")
+print("Original Dataset")
 display(df)
 
-df = handler.group_categorical_and_continuous_Cols(df, "id", ["timeShift"], ["steps", "hour", "minute"], "stepsLvl")
+df = handler.group_categorical_and_continuous_Cols(df, "id", [], ["steps", "hour", "minute"], "stepsLvl")
 
 print("Group independent and dependant variables")
 display(df)
@@ -26,16 +26,12 @@ display(df)
 labelIndexer = StringIndexer(inputCol='label',
                         outputCol='indexedLabel').fit(df)
 
-print("Labels Indexed")
-labelIndexer.transform(df).show(5, True)
-
-
 featureIndexer =VectorIndexer(inputCol="features", \
                             outputCol="indexedFeatures", \
                             maxCategories=4).fit(df)
 
-print("Features Indexed")
-featureIndexer.transform(df).show(5, True)
+print("Labels Indexed")
+display(labelIndexer.transform(df).select(['label', 'indexedLabel']).dropDuplicates())
 
 # Split the data into training and test sets (40% held out for testing)
 (trainingData, testData) = df.randomSplit([0.7, 0.3])
@@ -53,4 +49,5 @@ model = pipeline.fit(trainingData)
 # Make predictions.
 predictions = model.transform(testData)
 # Select example rows to display.
-predictions.select("features","label","predictedLabel").show(500)
+print("Predictions")
+display(predictions.select("features","label","predictedLabel"))
